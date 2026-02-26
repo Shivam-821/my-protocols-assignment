@@ -5,10 +5,14 @@ application-layer-protocols/
 │   ├── Cargo.toml
 │   ├── Cargo.lock
 │   └── src/
-│       ├── main.rs            # can launch all or use subcommands
-│       ├── https_server.rs
-│       ├── dns.rs
-│       └── dhcp.rs
+│       ├── main.rs  
+│           ├──protocols
+│                ├── https_server.rs
+│                ├── dns.rs
+│                ├── dhcp.rs
+│              
+│       
+│      
 └── js-part/                   # FTP server + SMTP (client or simple server)
         ├── package.json
         ├── server.js              # main entry, or separate files
