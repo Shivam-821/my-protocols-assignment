@@ -10,8 +10,8 @@ application-layer-protocols/
 │       ├── dns.rs
 │       └── dhcp.rs
 └── js-part/                   # FTP server + SMTP (client or simple server)
-      ├── package.json
-      ├── server.js              # main entry, or separate files
-      ├── ftp-server.js
-      └── smtp.js
+        ├── package.json
+        ├── server.js              # main entry, or separate files
+        ├── ftp-server.js
+        └── smtp.js
 ```
