@@ -1,3 +1,9 @@
+Assignment by
+- Abhinav Patra: 23103069
+- Shivam Raj: 23103073
+- Rahul Kumar: 23103051
+
+## Project structure.
 ```
 application-layer-protocols/
 ├── README.md                  # explain split, how to run each part, why Rust vs JS
@@ -439,44 +445,31 @@ To execute the project, ensure you use `mkcert` (`mkcert -install` and `mkcert l
 
 ## Protocol Specifications & Code
 
-### 1. DNS server (Port 3001)
+### 1. DNS server (Port 5454)
 
-Operating on `3001` natively, our lightweight DNS server executes successfully as a forwarder. It parses queries utilizing `hickory` and immediately routes all standard lookup traffic to `8.8.8.8` (Google's standard public DNS resolver).
+Operating on `5454` natively, our lightweight DNS server executes successfully as a forwarder. It parses queries utilizing `hickory` and provides local zone support for `example.local`. It supports both UDP and TCP connections for maximum compatibility.
 
 **DNS Server Code (Rust):**
 
 ```rust
-use anyhow::Result;
-use hickory_proto::rr::{rdata::A, rdata::NS, LowerName, Name, Record, RData};
-use hickory_server::authority::{AuthorityObject, Catalog, ZoneType};
-use hickory_server::server::ServerFuture;
-use hickory_server::store::in_memory::InMemoryAuthority;
-use std::net::SocketAddr;
-use std::str::FromStr;
-use std::sync::Arc;
-
 pub async fn run_dns_server() -> Result<()> {
     let mut catalog = Catalog::new();
-    let zone_name = Name::from_str("example.local.")?;
-    let serial = 1u32;
+    let origin = Name::from_str("example.local.")?;
+    let serial = 2025022701u32;
 
-    let mut authority = InMemoryAuthority::empty(zone_name.clone(), ZoneType::Primary, false);
-
-    authority.upsert(Record::from_rdata(
-        zone_name.clone(), 3600,
-        RData::SOA(hickory_proto::rr::rdata::SOA::new(
-            Name::from_str("ns1.example.local.")?,
-            Name::from_str("admin.example.local.")?,
-            serial, 3600, 600, 86400, 3600,
-        )),
-    ), serial).await;
+    let mut authority = InMemoryAuthority::empty(origin.clone(), ZoneType::Primary, false);
+    // ... upsert SOA, NS, A records ...
 
     let addr: SocketAddr = "127.0.0.1:5454".parse()?;
     let mut server = ServerFuture::new(catalog);
-    let udp_socket = tokio::net::UdpSocket::bind(addr).await?;
-    server.register_socket(udp_socket);
 
-    println!("DNS server listening on udp://{}", addr);
+    let udp = UdpSocket::bind(addr).await?;
+    server.register_socket(udp);
+
+    let tcp = TcpListener::bind(addr).await?;
+    server.register_listener(tcp, Duration::from_secs(10));
+
+    println!("→ DNS listening on  udp://127.0.0.1:5454");
     server.block_until_done().await?;
     Ok(())
 }
@@ -524,32 +517,31 @@ pub async fn run_dhcp_server() -> Result<()> {
 
 ### 3. HTTPS server (Port 3000)
 
-For HTTP testing, the implementation binds locally on `3000` executing the HTTP pipeline securely behind a `rustls` wrapper instance enforcing secure payloads. We use the `axum` web framework for clean, high-performance routing.
+For secure web communication, we implement an HTTPS server utilizing `axum-server` with `rustls`. It loads certificates generated via `mkcert` to provide a trusted local development experience over encrypted channels.
 
 **HTTPS Server Code (Rust):**
 
 ```rust
-use std::net::SocketAddr;
-use axum::{Router};
-use axum::routing::get;
-
-pub async fn run_http_server()-> Result<(), Box<dyn std::error::Error>>{
-    let app = Router::new()
-        .route("/", get(handler));
-
+pub async fn run_http_server() -> Result<(), Box<dyn std::error::Error>> {
+    let app = Router::new().route("/", get(handler));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Listening on https://{}", addr);
 
-    axum::serve(
-        tokio::net::TcpListener::bind(&addr).await.unwrap(),
-        app.into_make_service(),
-    )
-    .await?;
+    let certs = rustls_pemfile::certs(&mut BufReader::new(File::open("certs/cert.pem")?))
+        .collect::<Result<Vec<_>, _>>()?;
+    let key = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(File::open("certs/key.pem")?))
+        .next().unwrap()?;
+
+    let config = rustls::ServerConfig::builder()
+        .with_no_client_auth()
+        .with_single_cert(certs, PrivateKeyDer::Pkcs8(key))?;
+
+    let tls_config = RustlsConfig::from_config(Arc::new(config));
+    println!("HTTPS server listening on https://localhost:3000");
+
+    axum_server::bind_rustls(addr, tls_config)
+        .serve(app.into_make_service())
+        .await?;
     Ok(())
-}
-
-async fn handler() -> &'static str{
-    "Hello from Secure http server endpoint"
 }
 ```
 
