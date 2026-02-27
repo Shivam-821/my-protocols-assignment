@@ -8,7 +8,7 @@ pub async fn run_http_server() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(handler));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8443));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     // Load cert & key (mkcert files)
     let cert_file = File::open("certs/cert.pem")?;

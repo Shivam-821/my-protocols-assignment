@@ -3,4 +3,8 @@
 3. axum-server and rustls-pemfile for loading PEM files, handling https
 4. Downloaded mkcert for certificate generation, and https
 5. mkcert -install and mkcert localhost to create certificates valid for those endpoints
-6. 
+6. The DNS server is forwarding every query to 8.8.8.8 which is the standard google's public DNS
+7. Now 
+   - https: 3000
+   - DNS: 3001
+
