@@ -208,6 +208,8 @@ client.on("error", (err) => {
 });
 ```
 
+![alt text](<ftp.png>)
+
 ### II. SMTP (Simple Mail Transfer Protocol)
 
 SMTP is the protocol responsible for sending emails. When you hit "send" in your email client, SMTP handles the process of pushing that email from your computer to the email server. We created a server to receive the mail and a client to send it.
@@ -405,6 +407,8 @@ client.on("error", (err) => {
   console.error("Client error:", err);
 });
 ```
+
+![alt text](smtp.png)
 
 ### III. DNS (Domain Name System)
 
