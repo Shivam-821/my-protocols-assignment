@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Application Protocol Assignment</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <pre><code>application-layer-protocols/
+├── README.md                  # explain split, how to run each part, why Rust vs JS
+├── rust-part/                 # HTTPS server + DNS + DHCP
+│   ├── Cargo.toml
+│   ├── Cargo.lock
+│   └── src/
+│       ├── main.rs
+│           ├──protocols
+│                ├── https_server.rs
+│                ├── dns.rs
+│                ├── dhcp.rs
+│
+│
+│
+└── js-part/                   # FTP server + SMTP (client or simple server)
+        ├── package.json
+        ├── server.js              # main entry, or separate files
+        ├── ftp-server.js
+        └── smtp.js
+</code></pre>
+<h1 id="application-protocol-assignment">Application Protocol Assignment</h1>
+<h2 id="1-what-are-application-layers">1. What are Application Layers?</h2>
+<p>Think of the Application Layer as the &quot;face&quot; of the internet. When you open a web browser, send an email, or download a file, you are interacting with the Application Layer. It is the topmost layer in the OSI (Open Systems Interconnection) and TCP/IP models.</p>
+<p>Simply put, the Application Layer is where network applications live and work. It provides the tools and rules for different software applications to communicate over a network, ensuring that the data you see on your screen makes sense.</p>
+<h2 id="2-what-does-it-do-its-application">2. What Does It Do? (Its Application)</h2>
+<p>The main job of the application layer is to provide services directly to the user's applications.</p>
+<ul>
+<li><strong>Web Browsing:</strong> It fetches web pages and shows them to you.</li>
+<li><strong>Emailing:</strong> It sends your emails to the right person and receives emails for you.</li>
+<li><strong>File Sharing:</strong> It helps you download or upload files between computers safely.</li>
+<li><strong>Translating Data:</strong> It ensures that if a computer sends a picture, the receiving computer knows it is a picture and displays it correctly.</li>
+</ul>
+<p>In short, it acts as a bridge between the software you are using (like Chrome or Outlook) and the rest of the complicated network below it.</p>
+<h2 id="3-different-protocols-it-follows">3. Different Protocols It Follows</h2>
+<p>Protocols are simply &quot;rules of communication.&quot; For the application layer to do its many different jobs, it uses specific protocols for specific tasks. Some of the most common ones are:</p>
+<ul>
+<li><strong>HTTP/HTTPS (HyperText Transfer Protocol):</strong> For browsing websites.</li>
+<li><strong>FTP (File Transfer Protocol):</strong> For transferring files from one computer to another.</li>
+<li><strong>SMTP (Simple Mail Transfer Protocol):</strong> For sending emails.</li>
+<li><strong>DNS (Domain Name System):</strong> For converting website names (like <a href="http://google.com">google.com</a>) into IP addresses.</li>
+<li><strong>DHCP (Dynamic Host Configuration Protocol):</strong> For automatically assigning IP addresses to devices on a network.</li>
+</ul>
+<hr>
+<h2 id="4-application-protocols--code-implementation">4. Application Protocols &amp; Code Implementation</h2>
+<p>Here is a simple look at the major protocols and how we implemented them in this assignment.</p>
+<h3 id="i-ftp-file-transfer-protocol">I. FTP (File Transfer Protocol)</h3>
+<p>FTP is a standard protocol used to transfer computer files between a client and server on a computer network. Think of it like a delivery service for your files. We created a basic FTP server where a user can connect, log in with a username and password, and request the current directory.</p>
+<p><strong>FTP Server Code (TypeScript):</strong></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> net <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;net&quot;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PORT</span> = <span class="hljs-number">2121</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">HOST</span> = <span class="hljs-string">&quot;127.0.0.1&quot;</span>;
+
+<span class="hljs-keyword">interface</span> <span class="hljs-title class_">ClientState</span> {
+  <span class="hljs-attr">isAuthenticated</span>: <span class="hljs-built_in">boolean</span>;
+  <span class="hljs-attr">username</span>: <span class="hljs-built_in">string</span> | <span class="hljs-literal">null</span>;
+}
+
+<span class="hljs-keyword">const</span> server = net.<span class="hljs-title function_">createServer</span>(<span class="hljs-function">(<span class="hljs-params">socket</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+    <span class="hljs-string">`[+] Client connected: <span class="hljs-subst">${socket.remoteAddress}</span>:<span class="hljs-subst">${socket.remotePort}</span>`</span>,
+  );
+
+  <span class="hljs-keyword">const</span> <span class="hljs-attr">state</span>: <span class="hljs-title class_">ClientState</span> = {
+    <span class="hljs-attr">isAuthenticated</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">username</span>: <span class="hljs-literal">null</span>,
+  };
+
+  socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;220 Welcome to the Simple TS FTP Server\r\n&quot;</span>);
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> message = data.<span class="hljs-title function_">toString</span>().<span class="hljs-title function_">trim</span>();
+    <span class="hljs-keyword">if</span> (!message) <span class="hljs-keyword">return</span>;
+
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[CLIENT] <span class="hljs-subst">${message}</span>`</span>);
+
+    <span class="hljs-keyword">const</span> parts = message.<span class="hljs-title function_">split</span>(<span class="hljs-string">&quot; &quot;</span>);
+    <span class="hljs-keyword">const</span> command = (parts[<span class="hljs-number">0</span>] ?? <span class="hljs-string">&quot;&quot;</span>).<span class="hljs-title function_">toUpperCase</span>();
+    <span class="hljs-keyword">const</span> args = parts.<span class="hljs-title function_">slice</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">join</span>(<span class="hljs-string">&quot; &quot;</span>);
+    <span class="hljs-keyword">switch</span> (command) {
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;USER&quot;</span>:
+        <span class="hljs-keyword">if</span> (!args) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;501 Syntax error in parameters or arguments.\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        state.<span class="hljs-property">username</span> = args;
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">`331 User <span class="hljs-subst">${args}</span> okay, need password.\r\n`</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PASS&quot;</span>:
+        <span class="hljs-keyword">if</span> (!state.<span class="hljs-property">username</span>) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;503 Bad sequence of commands (send USER first).\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        <span class="hljs-keyword">if</span> (
+          state.<span class="hljs-property">username</span> === <span class="hljs-string">&quot;anonymous&quot;</span> ||
+          (state.<span class="hljs-property">username</span> === <span class="hljs-string">&quot;admin&quot;</span> &amp;&amp; args === <span class="hljs-string">&quot;password&quot;</span>)
+        ) {
+          state.<span class="hljs-property">isAuthenticated</span> = <span class="hljs-literal">true</span>;
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;230 User logged in, proceed.\r\n&quot;</span>);
+        } <span class="hljs-keyword">else</span> {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;530 Login incorrect.\r\n&quot;</span>);
+          state.<span class="hljs-property">username</span> = <span class="hljs-literal">null</span>;
+        }
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;SYST&quot;</span>:
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;215 UNIX Type: L8\r\n&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">if</span> (!state.<span class="hljs-property">isAuthenticated</span>) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;530 Please login with USER and PASS.\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&#x27;257 &quot;/&quot; is the current directory\r\n&#x27;</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;QUIT&quot;</span>:
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;221 Service closing control connection.\r\n&quot;</span>);
+        socket.<span class="hljs-title function_">end</span>();
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-attr">default</span>:
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;502 Command not implemented.\r\n&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  });
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;end&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+      <span class="hljs-string">`[-] Client disconnected: <span class="hljs-subst">${socket.remoteAddress}</span>:<span class="hljs-subst">${socket.remotePort}</span>`</span>,
+    );
+  });
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`[!] Socket error:`</span>, err);
+  });
+});
+
+server.<span class="hljs-title function_">listen</span>(<span class="hljs-variable constant_">PORT</span>, <span class="hljs-variable constant_">HOST</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[SERVER] FTP Control Server listening on <span class="hljs-subst">${HOST}</span>:<span class="hljs-subst">${PORT}</span>`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[SERVER] Run &#x27;bun run ftp-client.ts&#x27; to test the connection.\n`</span>);
+});
+</code></pre>
+<p><strong>FTP Client Code (TypeScript):</strong></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> net <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;net&quot;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PORT</span> = <span class="hljs-number">2121</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">HOST</span> = <span class="hljs-string">&quot;127.0.0.1&quot;</span>;
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Attempting to connect to FTP Server at <span class="hljs-subst">${HOST}</span>:<span class="hljs-subst">${PORT}</span>...`</span>);
+
+<span class="hljs-keyword">const</span> client = net.<span class="hljs-title function_">createConnection</span>({ <span class="hljs-attr">port</span>: <span class="hljs-variable constant_">PORT</span>, <span class="hljs-attr">host</span>: <span class="hljs-variable constant_">HOST</span> }, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;Connected to server.\n&quot;</span>);
+});
+
+<span class="hljs-keyword">const</span> commands = [<span class="hljs-string">&quot;USER admin&quot;</span>, <span class="hljs-string">&quot;PASS password&quot;</span>, <span class="hljs-string">&quot;SYST&quot;</span>, <span class="hljs-string">&quot;PWD&quot;</span>, <span class="hljs-string">&quot;QUIT&quot;</span>];
+
+<span class="hljs-keyword">let</span> currentCommandIndex = <span class="hljs-number">0</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">sendNextCommand</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (currentCommandIndex &lt; commands.<span class="hljs-property">length</span>) {
+    <span class="hljs-keyword">const</span> cmd = commands[currentCommandIndex];
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[SENDING] <span class="hljs-subst">${cmd}</span>`</span>);
+
+    client.<span class="hljs-title function_">write</span>(<span class="hljs-string">`<span class="hljs-subst">${cmd}</span>\r\n`</span>);
+    currentCommandIndex++;
+  }
+}
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> message = data.<span class="hljs-title function_">toString</span>().<span class="hljs-title function_">trim</span>();
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[RECEIVED] <span class="hljs-subst">${message}</span>\n`</span>);
+
+  <span class="hljs-title function_">sendNextCommand</span>();
+});
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;end&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;\nDisconnected from server.&quot;</span>);
+});
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;Client error:&quot;</span>, err);
+});
+</code></pre>
+<h3 id="ii-smtp-simple-mail-transfer-protocol">II. SMTP (Simple Mail Transfer Protocol)</h3>
+<p>SMTP is the protocol responsible for sending emails. When you hit &quot;send&quot; in your email client, SMTP handles the process of pushing that email from your computer to the email server. We created a server to receive the mail and a client to send it.</p>
+<p><strong>SMTP Server Code (TypeScript):</strong></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> net <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;net&quot;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PORT</span> = <span class="hljs-number">2525</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">HOST</span> = <span class="hljs-string">&quot;127.0.0.1&quot;</span>;
+
+<span class="hljs-keyword">interface</span> <span class="hljs-title class_">ClientState</span> {
+  <span class="hljs-attr">state</span>: <span class="hljs-string">&quot;INIT&quot;</span> | <span class="hljs-string">&quot;GREETED&quot;</span> | <span class="hljs-string">&quot;MAIL_FROM&quot;</span> | <span class="hljs-string">&quot;RCPT_TO&quot;</span> | <span class="hljs-string">&quot;DATA&quot;</span>;
+  <span class="hljs-attr">from</span>: <span class="hljs-built_in">string</span> | <span class="hljs-literal">null</span>;
+  <span class="hljs-attr">to</span>: <span class="hljs-built_in">string</span>[];
+  <span class="hljs-attr">data</span>: <span class="hljs-built_in">string</span>;
+}
+
+<span class="hljs-keyword">const</span> server = net.<span class="hljs-title function_">createServer</span>(<span class="hljs-function">(<span class="hljs-params">socket</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+    <span class="hljs-string">`[+] Client connected: <span class="hljs-subst">${socket.remoteAddress}</span>:<span class="hljs-subst">${socket.remotePort}</span>`</span>,
+  );
+
+  <span class="hljs-keyword">const</span> <span class="hljs-attr">state</span>: <span class="hljs-title class_">ClientState</span> = {
+    <span class="hljs-attr">state</span>: <span class="hljs-string">&quot;INIT&quot;</span>,
+    <span class="hljs-attr">from</span>: <span class="hljs-literal">null</span>,
+    <span class="hljs-attr">to</span>: [],
+    <span class="hljs-attr">data</span>: <span class="hljs-string">&quot;&quot;</span>,
+  };
+
+  socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;220 Welcome to the Simple TS SMTP Server\r\n&quot;</span>);
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> message = data.<span class="hljs-title function_">toString</span>();
+
+    <span class="hljs-keyword">if</span> (state.<span class="hljs-property">state</span> === <span class="hljs-string">&quot;DATA&quot;</span>) {
+      state.<span class="hljs-property">data</span> += message;
+      <span class="hljs-keyword">if</span> (state.<span class="hljs-property">data</span>.<span class="hljs-title function_">endsWith</span>(<span class="hljs-string">&quot;\r\n.\r\n&quot;</span>)) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+          <span class="hljs-string">`[MAIL RECEIVED]\nFrom: <span class="hljs-subst">${state.<span class="hljs-keyword">from</span>}</span>\nTo: <span class="hljs-subst">${state.to.join(
+            <span class="hljs-string">&quot;, &quot;</span>,
+          )}</span>\n\n<span class="hljs-subst">${state.data.slice(<span class="hljs-number">0</span>, -<span class="hljs-number">5</span>)}</span>`</span>,
+        );
+        state.<span class="hljs-property">state</span> = <span class="hljs-string">&quot;GREETED&quot;</span>;
+        state.<span class="hljs-property">from</span> = <span class="hljs-literal">null</span>;
+        state.<span class="hljs-property">to</span> = [];
+        state.<span class="hljs-property">data</span> = <span class="hljs-string">&quot;&quot;</span>;
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;250 OK: Message accepted for delivery\r\n&quot;</span>);
+      }
+      <span class="hljs-keyword">return</span>;
+    }
+
+    <span class="hljs-keyword">const</span> trimmedMessage = message.<span class="hljs-title function_">trim</span>();
+    <span class="hljs-keyword">if</span> (!trimmedMessage) <span class="hljs-keyword">return</span>;
+
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[CLIENT] <span class="hljs-subst">${trimmedMessage}</span>`</span>);
+
+    <span class="hljs-keyword">const</span> parts = trimmedMessage.<span class="hljs-title function_">split</span>(<span class="hljs-string">&quot; &quot;</span>);
+    <span class="hljs-keyword">const</span> command = (parts[<span class="hljs-number">0</span>] ?? <span class="hljs-string">&quot;&quot;</span>).<span class="hljs-title function_">toUpperCase</span>();
+    <span class="hljs-keyword">const</span> args = parts.<span class="hljs-title function_">slice</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">join</span>(<span class="hljs-string">&quot; &quot;</span>);
+
+    <span class="hljs-keyword">switch</span> (command) {
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;HELO&quot;</span>:
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;EHLO&quot;</span>:
+        state.<span class="hljs-property">state</span> = <span class="hljs-string">&quot;GREETED&quot;</span>;
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">`250 Hello <span class="hljs-subst">${args || <span class="hljs-string">&quot;Client&quot;</span>}</span>, pleased to meet you\r\n`</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;MAIL&quot;</span>:
+        <span class="hljs-keyword">if</span> (state.<span class="hljs-property">state</span> !== <span class="hljs-string">&quot;GREETED&quot;</span>) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;503 Bad sequence of commands\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        <span class="hljs-keyword">if</span> (args.<span class="hljs-title function_">toUpperCase</span>().<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;FROM:&quot;</span>)) {
+          state.<span class="hljs-property">from</span> = args.<span class="hljs-title function_">slice</span>(<span class="hljs-number">5</span>).<span class="hljs-title function_">trim</span>();
+          state.<span class="hljs-property">state</span> = <span class="hljs-string">&quot;MAIL_FROM&quot;</span>;
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;250 OK\r\n&quot;</span>);
+        } <span class="hljs-keyword">else</span> {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;501 Syntax error in parameters or arguments\r\n&quot;</span>);
+        }
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;RCPT&quot;</span>:
+        <span class="hljs-keyword">if</span> (state.<span class="hljs-property">state</span> !== <span class="hljs-string">&quot;MAIL_FROM&quot;</span> &amp;&amp; state.<span class="hljs-property">state</span> !== <span class="hljs-string">&quot;RCPT_TO&quot;</span>) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;503 Bad sequence of commands\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        <span class="hljs-keyword">if</span> (args.<span class="hljs-title function_">toUpperCase</span>().<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;TO:&quot;</span>)) {
+          state.<span class="hljs-property">to</span>.<span class="hljs-title function_">push</span>(args.<span class="hljs-title function_">slice</span>(<span class="hljs-number">3</span>).<span class="hljs-title function_">trim</span>());
+          state.<span class="hljs-property">state</span> = <span class="hljs-string">&quot;RCPT_TO&quot;</span>;
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;250 OK\r\n&quot;</span>);
+        } <span class="hljs-keyword">else</span> {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;501 Syntax error in parameters or arguments\r\n&quot;</span>);
+        }
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;DATA&quot;</span>:
+        <span class="hljs-keyword">if</span> (state.<span class="hljs-property">state</span> !== <span class="hljs-string">&quot;RCPT_TO&quot;</span>) {
+          socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;503 Bad sequence of commands\r\n&quot;</span>);
+          <span class="hljs-keyword">break</span>;
+        }
+        state.<span class="hljs-property">state</span> = <span class="hljs-string">&quot;DATA&quot;</span>;
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;354 End data with &lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;\r\n&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;QUIT&quot;</span>:
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;221 Bye\r\n&quot;</span>);
+        socket.<span class="hljs-title function_">end</span>();
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-attr">default</span>:
+        socket.<span class="hljs-title function_">write</span>(<span class="hljs-string">&quot;502 Command not implemented\r\n&quot;</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  });
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;end&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+      <span class="hljs-string">`[-] Client disconnected: <span class="hljs-subst">${socket.remoteAddress}</span>:<span class="hljs-subst">${socket.remotePort}</span>`</span>,
+    );
+  });
+
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`[!] Socket error:`</span>, err);
+  });
+});
+
+server.<span class="hljs-title function_">listen</span>(<span class="hljs-variable constant_">PORT</span>, <span class="hljs-variable constant_">HOST</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[SERVER] SMTP Server listening on <span class="hljs-subst">${HOST}</span>:<span class="hljs-subst">${PORT}</span>`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+    <span class="hljs-string">`[SERVER] Run &#x27;bun run smtp-client.ts&#x27; to test the connection.\n`</span>,
+  );
+});
+</code></pre>
+<p><strong>SMTP Client Code (TypeScript):</strong></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> net <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;net&quot;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PORT</span> = <span class="hljs-number">2525</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">HOST</span> = <span class="hljs-string">&quot;127.0.0.1&quot;</span>;
+
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Attempting to connect to SMTP Server at <span class="hljs-subst">${HOST}</span>:<span class="hljs-subst">${PORT}</span>...`</span>);
+
+<span class="hljs-keyword">const</span> client = net.<span class="hljs-title function_">createConnection</span>({ <span class="hljs-attr">port</span>: <span class="hljs-variable constant_">PORT</span>, <span class="hljs-attr">host</span>: <span class="hljs-variable constant_">HOST</span> }, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;Connected to server.\n&quot;</span>);
+});
+
+<span class="hljs-keyword">const</span> commands = [
+  <span class="hljs-string">&quot;EHLO localhost&quot;</span>,
+  <span class="hljs-string">&quot;MAIL FROM:&lt;shivam@example.com&gt;&quot;</span>,
+  <span class="hljs-string">&quot;RCPT TO:&lt;abhinav@example.com&gt;&quot;</span>,
+  <span class="hljs-string">&quot;DATA&quot;</span>,
+  <span class="hljs-string">&quot;Subject: Test Message\r\n\r\nThis is a test email sent from our simple TS SMTP client.\r\n.&quot;</span>,
+  <span class="hljs-string">&quot;QUIT&quot;</span>,
+];
+
+<span class="hljs-keyword">let</span> currentCommandIndex = <span class="hljs-number">0</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">sendNextCommand</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (currentCommandIndex &lt; commands.<span class="hljs-property">length</span>) {
+    <span class="hljs-keyword">const</span> cmd = commands[currentCommandIndex];
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[SENDING] <span class="hljs-subst">${cmd}</span>`</span>);
+
+    client.<span class="hljs-title function_">write</span>(<span class="hljs-string">`<span class="hljs-subst">${cmd}</span>\r\n`</span>);
+    currentCommandIndex++;
+  }
+}
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;data&quot;</span>, <span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> message = data.<span class="hljs-title function_">toString</span>().<span class="hljs-title function_">trim</span>();
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[RECEIVED] <span class="hljs-subst">${message}</span>\n`</span>);
+
+  <span class="hljs-keyword">if</span> (message.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;354&quot;</span>)) {
+    <span class="hljs-title function_">sendNextCommand</span>();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (
+    message.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;220&quot;</span>) ||
+    message.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;250&quot;</span>) ||
+    message.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;221&quot;</span>)
+  ) {
+    <span class="hljs-title function_">sendNextCommand</span>();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (message.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;5&quot;</span>)) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;Error from server. Aborting.&quot;</span>);
+    client.<span class="hljs-title function_">end</span>();
+  }
+});
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;end&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&quot;\nDisconnected from server.&quot;</span>);
+});
+
+client.<span class="hljs-title function_">on</span>(<span class="hljs-string">&quot;error&quot;</span>, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;Client error:&quot;</span>, err);
+});
+</code></pre>
+<h3 id="iii-dns-domain-name-system">III. DNS (Domain Name System)</h3>
+<p>DNS is the phonebook of the internet. It translates human-friendly URLs (like <code>google.com</code>) into computer-friendly IP addresses. Our Rust implementation acts as a server that can manage local zones and provide lookups.</p>
+<h3 id="iv-dhcp-dynamic-host-configuration-protocol">IV. DHCP (Dynamic Host Configuration Protocol)</h3>
+<p>DHCP is the protocol used to automatically assign IP addresses to devices on a network. It manages IP leases and ensures that every device in a local network has a unique identity without manual configuration.</p>
+<hr>
+<h1 id="rust-part-application-layer-protocols">Rust-part: Application Layer Protocols</h1>
+<p>This part of the assignment showcases the power of Rust for networked, asynchronous services.</p>
+<h2 id="project-structure">Project Structure</h2>
+<pre><code class="language-text">rust-part/
+├── Cargo.toml                  # Defines dependencies and metadata
+└── src/
+    ├── main.rs                 # Central entry point spawning the servers asynchronously
+    └── protocols/
+        ├── https_server.rs     # axum based HTTPS encrypted web server
+        ├── dns.rs              # Hickory-server based DNS handler
+        └── dhcp.rs             # DHCP parsing &amp; DORA flow logic
+</code></pre>
+<h2 id="dependencies--setup">Dependencies &amp; Setup</h2>
+<p>The <code>Cargo.toml</code> file captures our core dependencies for managing the protocols cleanly (using roughly 1-2 lines per category):</p>
+<ul>
+<li><strong>Web &amp; Async:</strong> <code>axum</code> mappings enable HTTP endpoint configuration over the <code>tokio</code> asynchronous runtime.</li>
+<li><strong>Security:</strong> <code>axum-server</code> and <code>rustls-pemfile</code> handle loading our PEM files and securing connections via robust TLS certificates.</li>
+<li><strong>Protocols:</strong> <code>hickory-server</code> and <code>dhcproto</code> wrap low-level packet parsing complexities for DNS interactions and DHCP packet generation safely.</li>
+</ul>
+<p>To execute the project, ensure you use <code>mkcert</code> (<code>mkcert -install</code> and <code>mkcert localhost</code>) to populate the <code>rust-part</code> with certificates valid for HTTPS serving. Run all services natively via <code>cargo run</code>.</p>
+<h2 id="protocol-specifications--code">Protocol Specifications &amp; Code</h2>
+<h3 id="1-dns-server-port-3001">1. DNS server (Port 3001)</h3>
+<p>Operating on <code>3001</code> natively, our lightweight DNS server executes successfully as a forwarder. It parses queries utilizing <code>hickory</code> and immediately routes all standard lookup traffic to <code>8.8.8.8</code> (Google's standard public DNS resolver).</p>
+<p><strong>DNS Server Code (Rust):</strong></p>
+<pre><code class="language-rust"><span class="hljs-keyword">use</span> anyhow::<span class="hljs-type">Result</span>;
+<span class="hljs-keyword">use</span> hickory_proto::rr::{rdata::A, rdata::NS, LowerName, Name, Record, RData};
+<span class="hljs-keyword">use</span> hickory_server::authority::{AuthorityObject, Catalog, ZoneType};
+<span class="hljs-keyword">use</span> hickory_server::server::ServerFuture;
+<span class="hljs-keyword">use</span> hickory_server::store::in_memory::InMemoryAuthority;
+<span class="hljs-keyword">use</span> std::net::SocketAddr;
+<span class="hljs-keyword">use</span> std::str::FromStr;
+<span class="hljs-keyword">use</span> std::sync::Arc;
+
+<span class="hljs-keyword">pub</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">run_dns_server</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;()&gt; {
+    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">catalog</span> = Catalog::<span class="hljs-title function_ invoke__">new</span>();
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">zone_name</span> = Name::<span class="hljs-title function_ invoke__">from_str</span>(<span class="hljs-string">&quot;example.local.&quot;</span>)?;
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">serial</span> = <span class="hljs-number">1u32</span>;
+
+    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">authority</span> = InMemoryAuthority::<span class="hljs-title function_ invoke__">empty</span>(zone_name.<span class="hljs-title function_ invoke__">clone</span>(), ZoneType::Primary, <span class="hljs-literal">false</span>);
+
+    authority.<span class="hljs-title function_ invoke__">upsert</span>(Record::<span class="hljs-title function_ invoke__">from_rdata</span>(
+        zone_name.<span class="hljs-title function_ invoke__">clone</span>(), <span class="hljs-number">3600</span>,
+        RData::<span class="hljs-title function_ invoke__">SOA</span>(hickory_proto::rr::rdata::SOA::<span class="hljs-title function_ invoke__">new</span>(
+            Name::<span class="hljs-title function_ invoke__">from_str</span>(<span class="hljs-string">&quot;ns1.example.local.&quot;</span>)?,
+            Name::<span class="hljs-title function_ invoke__">from_str</span>(<span class="hljs-string">&quot;admin.example.local.&quot;</span>)?,
+            serial, <span class="hljs-number">3600</span>, <span class="hljs-number">600</span>, <span class="hljs-number">86400</span>, <span class="hljs-number">3600</span>,
+        )),
+    ), serial).<span class="hljs-keyword">await</span>;
+
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">addr</span>: SocketAddr = <span class="hljs-string">&quot;127.0.0.1:5454&quot;</span>.<span class="hljs-title function_ invoke__">parse</span>()?;
+    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">server</span> = ServerFuture::<span class="hljs-title function_ invoke__">new</span>(catalog);
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">udp_socket</span> = tokio::net::UdpSocket::<span class="hljs-title function_ invoke__">bind</span>(addr).<span class="hljs-keyword">await</span>?;
+    server.<span class="hljs-title function_ invoke__">register_socket</span>(udp_socket);
+
+    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;DNS server listening on udp://{}&quot;</span>, addr);
+    server.<span class="hljs-title function_ invoke__">block_until_done</span>().<span class="hljs-keyword">await</span>?;
+    <span class="hljs-title function_ invoke__">Ok</span>(())
+}
+</code></pre>
+<p><img src="file:///c:\Users\patra\Desktop\Rust\CN_proj\dns.png" alt="DNS server Response "></p>
+<h3 id="2-dhcp-server-port-67">2. DHCP server (Port 67)</h3>
+<p>Dynamic Host Configuration Protocol is critical for granting valid network IP addresses. By leveraging <code>dhcproto</code>, the server correctly evaluates network leases and fully executes the <strong>DORA</strong> flow seamlessly — <strong>D</strong>iscover → <strong>O</strong>ffer → <strong>R</strong>equest → <strong>A</strong>ck. Inform and Release operations are additionally supported.</p>
+<p><strong>DHCP Server Code (Rust):</strong></p>
+<pre><code class="language-rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">run_dhcp_server</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;()&gt; {
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">bind_addr</span>: SocketAddr = <span class="hljs-string">&quot;0.0.0.0:67&quot;</span>.<span class="hljs-title function_ invoke__">parse</span>()?;
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">socket</span> = UdpSocket::<span class="hljs-title function_ invoke__">bind</span>(bind_addr).<span class="hljs-keyword">await</span>?;
+    socket.<span class="hljs-title function_ invoke__">set_broadcast</span>(<span class="hljs-literal">true</span>)?;
+
+    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;DHCP server listening on {}&quot;</span>, bind_addr);
+
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">db</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(Mutex::<span class="hljs-title function_ invoke__">new</span>(LeaseDb::<span class="hljs-title function_ invoke__">new</span>()));
+    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">buf</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">0u8</span>; <span class="hljs-number">1500</span>];
+
+    <span class="hljs-keyword">loop</span> {
+        <span class="hljs-keyword">let</span> (len, peer) = socket.<span class="hljs-title function_ invoke__">recv_from</span>(&amp;<span class="hljs-keyword">mut</span> buf).<span class="hljs-keyword">await</span>?;
+        <span class="hljs-keyword">let</span> <span class="hljs-variable">msg</span> = <span class="hljs-keyword">match</span> Message::<span class="hljs-title function_ invoke__">decode</span>(&amp;<span class="hljs-keyword">mut</span> Decoder::<span class="hljs-title function_ invoke__">new</span>(&amp;buf[..len])) {
+            <span class="hljs-title function_ invoke__">Ok</span>(m) =&gt; m,
+            <span class="hljs-title function_ invoke__">Err</span>(e) =&gt; <span class="hljs-keyword">continue</span>,
+        };
+
+        <span class="hljs-keyword">if</span> msg_type == MessageType::Discover {
+            <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">db</span> = db_clone.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-keyword">await</span>;
+            <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(offered_ip) = db.<span class="hljs-title function_ invoke__">assign</span>(&amp;mac) {
+                <span class="hljs-keyword">let</span> <span class="hljs-variable">reply</span> = <span class="hljs-title function_ invoke__">build_reply</span>(&amp;msg, offered_ip, MessageType::Offer);
+                <span class="hljs-title function_ invoke__">send_reply</span>(socket_ref, &amp;reply).<span class="hljs-keyword">await</span>;
+                <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;OFFER {:?} → {}&quot;</span>, mac, offered_ip);
+            }
+        }
+    }
+}
+</code></pre>
+<p><img src="file:///c:\Users\patra\Desktop\Rust\CN_proj\dhcp.png" alt="DHCP server Response "></p>
+<h3 id="3-https-server-port-3000">3. HTTPS server (Port 3000)</h3>
+<p>For HTTP testing, the implementation binds locally on <code>3000</code> executing the HTTP pipeline securely behind a <code>rustls</code> wrapper instance enforcing secure payloads. We use the <code>axum</code> web framework for clean, high-performance routing.</p>
+<p><strong>HTTPS Server Code (Rust):</strong></p>
+<pre><code class="language-rust"><span class="hljs-keyword">use</span> std::net::SocketAddr;
+<span class="hljs-keyword">use</span> axum::{Router};
+<span class="hljs-keyword">use</span> axum::routing::get;
+
+<span class="hljs-keyword">pub</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">run_http_server</span>()<span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;(), <span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">dyn</span> std::error::Error&gt;&gt;{
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">app</span> = Router::<span class="hljs-title function_ invoke__">new</span>()
+        .<span class="hljs-title function_ invoke__">route</span>(<span class="hljs-string">&quot;/&quot;</span>, <span class="hljs-title function_ invoke__">get</span>(handler));
+
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">addr</span> = SocketAddr::<span class="hljs-title function_ invoke__">from</span>(([<span class="hljs-number">127</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>], <span class="hljs-number">3000</span>));
+    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Listening on https://{}&quot;</span>, addr);
+
+    axum::<span class="hljs-title function_ invoke__">serve</span>(
+        tokio::net::TcpListener::<span class="hljs-title function_ invoke__">bind</span>(&amp;addr).<span class="hljs-keyword">await</span>.<span class="hljs-title function_ invoke__">unwrap</span>(),
+        app.<span class="hljs-title function_ invoke__">into_make_service</span>(),
+    )
+    .<span class="hljs-keyword">await</span>?;
+    <span class="hljs-title function_ invoke__">Ok</span>(())
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">handler</span>() <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;static</span> <span class="hljs-type">str</span>{
+    <span class="hljs-string">&quot;Hello from Secure http server endpoint&quot;</span>
+}
+</code></pre>
+<p><img src="https.png" alt="HTTPS server Response "></p>
+
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+            
+        </body>
+        </html>

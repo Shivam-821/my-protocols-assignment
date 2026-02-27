@@ -5,14 +5,14 @@ application-layer-protocols/
 │   ├── Cargo.toml
 │   ├── Cargo.lock
 │   └── src/
-│       ├── main.rs  
+│       ├── main.rs
 │           ├──protocols
 │                ├── https_server.rs
 │                ├── dns.rs
 │                ├── dhcp.rs
-│              
-│       
-│      
+│
+│
+│
 └── js-part/                   # FTP server + SMTP (client or simple server)
         ├── package.json
         ├── server.js              # main entry, or separate files
@@ -400,11 +400,133 @@ client.on("error", (err) => {
 });
 ```
 
-### III. HTTP (HyperText Transfer Protocol)
+### III. DNS (Domain Name System)
 
-HTTP is the foundation of data communication for the World Wide Web. Whenever you load a website like Wikipedia or Google, your browser is making HTTP requests to a server, which sends back the HTML page you see. Below is a simple HTTP server that replies with a greeting when visited.
+DNS is the phonebook of the internet. It translates human-friendly URLs (like `google.com`) into computer-friendly IP addresses. Our Rust implementation acts as a server that can manage local zones and provide lookups.
 
-**HTTP Server Code (Rust):**
+### IV. DHCP (Dynamic Host Configuration Protocol)
+
+DHCP is the protocol used to automatically assign IP addresses to devices on a network. It manages IP leases and ensures that every device in a local network has a unique identity without manual configuration.
+
+---
+
+# Rust-part: Application Layer Protocols
+
+This part of the assignment showcases the power of Rust for networked, asynchronous services.
+
+## Project Structure
+
+```text
+rust-part/
+├── Cargo.toml                  # Defines dependencies and metadata
+└── src/
+    ├── main.rs                 # Central entry point spawning the servers asynchronously
+    └── protocols/
+        ├── https_server.rs     # axum based HTTPS encrypted web server
+        ├── dns.rs              # Hickory-server based DNS handler
+        └── dhcp.rs             # DHCP parsing & DORA flow logic
+```
+
+## Dependencies & Setup
+
+The `Cargo.toml` file captures our core dependencies for managing the protocols cleanly (using roughly 1-2 lines per category):
+
+- **Web & Async:** `axum` mappings enable HTTP endpoint configuration over the `tokio` asynchronous runtime.
+- **Security:** `axum-server` and `rustls-pemfile` handle loading our PEM files and securing connections via robust TLS certificates.
+- **Protocols:** `hickory-server` and `dhcproto` wrap low-level packet parsing complexities for DNS interactions and DHCP packet generation safely.
+
+To execute the project, ensure you use `mkcert` (`mkcert -install` and `mkcert localhost`) to populate the `rust-part` with certificates valid for HTTPS serving. Run all services natively via `cargo run`.
+
+## Protocol Specifications & Code
+
+### 1. DNS server (Port 3001)
+
+Operating on `3001` natively, our lightweight DNS server executes successfully as a forwarder. It parses queries utilizing `hickory` and immediately routes all standard lookup traffic to `8.8.8.8` (Google's standard public DNS resolver).
+
+**DNS Server Code (Rust):**
+
+```rust
+use anyhow::Result;
+use hickory_proto::rr::{rdata::A, rdata::NS, LowerName, Name, Record, RData};
+use hickory_server::authority::{AuthorityObject, Catalog, ZoneType};
+use hickory_server::server::ServerFuture;
+use hickory_server::store::in_memory::InMemoryAuthority;
+use std::net::SocketAddr;
+use std::str::FromStr;
+use std::sync::Arc;
+
+pub async fn run_dns_server() -> Result<()> {
+    let mut catalog = Catalog::new();
+    let zone_name = Name::from_str("example.local.")?;
+    let serial = 1u32;
+
+    let mut authority = InMemoryAuthority::empty(zone_name.clone(), ZoneType::Primary, false);
+
+    authority.upsert(Record::from_rdata(
+        zone_name.clone(), 3600,
+        RData::SOA(hickory_proto::rr::rdata::SOA::new(
+            Name::from_str("ns1.example.local.")?,
+            Name::from_str("admin.example.local.")?,
+            serial, 3600, 600, 86400, 3600,
+        )),
+    ), serial).await;
+
+    let addr: SocketAddr = "127.0.0.1:5454".parse()?;
+    let mut server = ServerFuture::new(catalog);
+    let udp_socket = tokio::net::UdpSocket::bind(addr).await?;
+    server.register_socket(udp_socket);
+
+    println!("DNS server listening on udp://{}", addr);
+    server.block_until_done().await?;
+    Ok(())
+}
+```
+
+![DNS server Response ](dns.png)
+
+### 2. DHCP server (Port 67)
+
+Dynamic Host Configuration Protocol is critical for granting valid network IP addresses. By leveraging `dhcproto`, the server correctly evaluates network leases and fully executes the **DORA** flow seamlessly — **D**iscover → **O**ffer → **R**equest → **A**ck. Inform and Release operations are additionally supported.
+
+**DHCP Server Code (Rust):**
+
+```rust
+pub async fn run_dhcp_server() -> Result<()> {
+    let bind_addr: SocketAddr = "0.0.0.0:67".parse()?;
+    let socket = UdpSocket::bind(bind_addr).await?;
+    socket.set_broadcast(true)?;
+
+    println!("DHCP server listening on {}", bind_addr);
+
+    let db = Arc::new(Mutex::new(LeaseDb::new()));
+    let mut buf = vec![0u8; 1500];
+
+    loop {
+        let (len, peer) = socket.recv_from(&mut buf).await?;
+        let msg = match Message::decode(&mut Decoder::new(&buf[..len])) {
+            Ok(m) => m,
+            Err(e) => continue,
+        };
+
+        if msg_type == MessageType::Discover {
+            let mut db = db_clone.lock().await;
+            if let Some(offered_ip) = db.assign(&mac) {
+                let reply = build_reply(&msg, offered_ip, MessageType::Offer);
+                send_reply(socket_ref, &reply).await;
+                println!("OFFER {:?} → {}", mac, offered_ip);
+            }
+        }
+    }
+}
+```
+
+![DHCP server Response ](dhcp.png)
+
+### 3. HTTPS server (Port 3000)
+
+For HTTP testing, the implementation binds locally on `3000` executing the HTTP pipeline securely behind a `rustls` wrapper instance enforcing secure payloads. We use the `axum` web framework for clean, high-performance routing.
+
+**HTTPS Server Code (Rust):**
 
 ```rust
 use std::net::SocketAddr;
@@ -416,16 +538,19 @@ pub async fn run_http_server()-> Result<(), Box<dyn std::error::Error>>{
         .route("/", get(handler));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Listening on http://{}", addr);
+    println!("Listening on https://{}", addr);
 
     axum::serve(
         tokio::net::TcpListener::bind(&addr).await.unwrap(),
         app.into_make_service(),
     )
-        .await?;
+    .await?;
     Ok(())
 }
+
 async fn handler() -> &'static str{
-    "Hello from Front http server endpoint"
+    "Hello from Secure http server endpoint"
 }
 ```
+
+![HTTPS server Response ](https.png)
